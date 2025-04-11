@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>MNIST Digit Recognition</title>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				max-width: 800px;
+				margin: 0 auto;
+				padding: 20px;
+			}
+			canvas {
+				border: 1px solid #000;
+				margin-bottom: 10px;
+			}
+			button {
+				padding: 10px 20px;
+				margin-right: 10px;
+			}
+			#result-container {
+				margin-top: 20px;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>MNIST Digit Recognition</h1>
+		<div>
+			<canvas id="drawCanvas" width="280" height="280"></canvas>
+		</div>
+		<div>
+			<button id="predictBtn">Predict</button>
+			<button id="clearBtn">Clear</button>
+		</div>
+		<div id="result-container">
+			<h2>Prediction: <span id="result">N/A</span></h2>
+			<p>Inference time: <span id="inferenceTime">N/A</span> ms</p>
+		</div>
+
+		<script>
+			const canvas = document.getElementById("drawCanvas");
+			const ctx = canvas.getContext("2d");
+			let isDrawing = false;
+
+			// Initialize canvas
+			ctx.fillStyle = "white";
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+			ctx.lineWidth = 15;
+			ctx.lineCap = "round";
+			ctx.strokeStyle = "black";
+
+			// Drawing events
+			canvas.addEventListener("mousedown", startDrawing);
+			canvas.addEventListener("mousemove", draw);
+			canvas.addEventListener("mouseup", stopDrawing);
+			canvas.addEventListener("mouseout", stopDrawing);
+
+			document
+				.getElementById("predictBtn")
+				.addEventListener("click", predict);
+			document
+				.getElementById("clearBtn")
+				.addEventListener("click", clearCanvas);
+
+			function startDrawing(e) {
+				isDrawing = true;
+				draw(e);
+			}
+
+			function draw(e) {
+				if (!isDrawing) return;
+				const rect = canvas.getBoundingClientRect();
+				const x = e.clientX - rect.left;
+				const y = e.clientY - rect.top;
+
+				ctx.beginPath();
+				ctx.moveTo(x, y);
+				ctx.lineTo(x, y);
+				ctx.stroke();
+			}
+
+			function stopDrawing() {
+				isDrawing = false;
+			}
+
+			function clearCanvas() {
+				ctx.fillStyle = "white";
+				ctx.fillRect(0, 0, canvas.width, canvas.height);
+				document.getElementById("result").textContent = "N/A";
+				document.getElementById("inferenceTime").textContent = "N/A";
+			}
+
+			function predict() {
+				// Show "Processing..." message
+				document.getElementById("result").textContent = "Processing...";
+
+				// Convert canvas to image data
+				const imageData = canvas.toDataURL("image/png");
+
+				// Send to server for prediction
+				fetch("/predict", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ image: imageData }),
+				})
+					.then((response) => response.json())
+					.then((data) => {
+						document.getElementById("result").textContent =
+							data.prediction;
+						document.getElementById("inferenceTime").textContent =
+							data.inference_time_ms;
+					})
+					.catch((error) => {
+						console.error("Error:", error);
+						document.getElementById("result").textContent = "Error";
+					});
+			}
+		</script>
+	</body>
+</html>
+
