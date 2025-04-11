@@ -1,0 +1,12 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install PyTorch and other dependencies
+RUN pip install --no-cache-dir torch torchvision matplotlib scikit-learn pandas
+
+# Copy training code
+COPY train.py .
+
+# Set entry point
+ENTRYPOINT ["python", "train.py"]

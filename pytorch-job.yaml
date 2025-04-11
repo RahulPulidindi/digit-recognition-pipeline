@@ -1,0 +1,28 @@
+apiVersion: "kubeflow.org/v1"
+kind: PyTorchJob
+metadata:
+    name: mnist-training-job
+spec:
+    pytorchReplicaSpecs:
+        Master:
+            replicas: 1
+            restartPolicy: OnFailure
+            template:
+                spec:
+                    containers:
+                        - name: pytorch
+                          image: gcr.io/neon-flare-452121-k8/mnist-train:latest
+                          resources:
+                              limits:
+                                  cpu: "3"
+                                  memory: "8Gi"
+                              requests:
+                                  cpu: "2"
+                                  memory: "4Gi"
+                          volumeMounts:
+                              - name: model-storage
+                                mountPath: /models
+                    volumes:
+                        - name: model-storage
+                          persistentVolumeClaim:
+                              claimName: model-storage-pvc

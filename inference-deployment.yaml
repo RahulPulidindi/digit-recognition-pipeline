@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: mnist-inference
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: mnist-inference
+    template:
+        metadata:
+            labels:
+                app: mnist-inference
+        spec:
+            containers:
+                - name: mnist-inference
+                  image: gcr.io/neon-flare-452121-k8/mnist-inference:latest
+                  ports:
+                      - containerPort: 5000
+                  volumeMounts:
+                      - name: model-storage
+                        mountPath: /models
+                  resources:
+                      limits:
+                          cpu: "3"
+                          memory: "4Gi"
+                      requests:
+                          cpu: "2"
+                          memory: "2Gi"
+            volumes:
+                - name: model-storage
+                  persistentVolumeClaim:
+                      claimName: model-storage-pvc
